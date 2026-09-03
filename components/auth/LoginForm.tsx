@@ -1,17 +1,14 @@
-
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
-
-import {
-  Eye,
-  EyeOff,
-  Lock,
-  Mail,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import api from "@/lib/axios";
 
 export default function LoginForm() {
+  const router = useRouter();
+
   const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -19,24 +16,80 @@ export default function LoginForm() {
     password: "",
   });
 
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+
+    // Clear error when user starts typing again
+    if (error) {
+      setError("");
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Login Data:", formData);
+    setLoading(true);
+    setError("");
 
-    // Backend API baad mein connect karenge
+    try {
+      const response = await api.post("/api/auth/login", formData);
+
+      const result = response.data;
+
+      // Check backend response
+      if (!result.success || !result.data) {
+        throw new Error(result.message || "Login failed");
+      }
+
+      // Make sure tokens exist
+      if (!result.data.accessToken || !result.data.refreshToken) {
+        throw new Error("Invalid response from server");
+      }
+
+      // Save tokens
+      localStorage.setItem(
+        "accessToken",
+        result.data.accessToken
+      );
+
+      localStorage.setItem(
+        "refreshToken",
+        result.data.refreshToken
+      );
+
+      // Login successful
+      router.push("/dashboard");
+    } catch (error: any) {
+      if (error.response) {
+        // Backend returned an error
+        setError(
+          error.response.data?.message ||
+            "Invalid email or password"
+        );
+      } else if (error.request) {
+        // Backend not reachable
+        setError(
+          "Unable to connect to server. Please try again."
+        );
+      } else {
+        setError(
+          error.message ||
+            "Something went wrong. Please try again."
+        );
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="w-full max-w-md">
-
       {/* Header */}
       <div className="mb-8 text-center">
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-black">
@@ -54,7 +107,6 @@ export default function LoginForm() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5">
-
         {/* Email */}
         <div>
           <label
@@ -75,7 +127,8 @@ export default function LoginForm() {
               onChange={handleChange}
               placeholder="you@company.com"
               required
-              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
+              disabled={loading}
+              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 disabled:cursor-not-allowed disabled:opacity-60"
             />
           </div>
         </div>
@@ -100,12 +153,16 @@ export default function LoginForm() {
               onChange={handleChange}
               placeholder="Enter your password"
               required
-              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-12 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
+              disabled={loading}
+              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-12 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 disabled:cursor-not-allowed disabled:opacity-60"
             />
 
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
+              onClick={() =>
+                setShowPassword(!showPassword)
+              }
+              disabled={loading}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-700"
             >
               {showPassword ? (
@@ -116,6 +173,13 @@ export default function LoginForm() {
             </button>
           </div>
         </div>
+
+        {/* Error */}
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </div>
+        )}
 
         {/* Reset Password */}
         <div className="flex justify-end">
@@ -130,9 +194,10 @@ export default function LoginForm() {
         {/* Login */}
         <button
           type="submit"
-          className="w-full rounded-xl bg-black py-3 text-sm font-semibold text-white transition hover:bg-gray-800 active:scale-[0.99]"
+          disabled={loading}
+          className="w-full rounded-xl bg-black py-3 text-sm font-semibold text-white transition hover:bg-gray-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Sign In
+          {loading ? "Signing in..." : "Sign In"}
         </button>
       </form>
 
