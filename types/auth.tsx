@@ -1,3 +1,8 @@
+
+export type UserRole = "ADMIN" | "HR" | "EMPLOYEE";
+
+
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -19,10 +24,11 @@ export interface ApiResponse<T> {
 export interface UserMeResponse {
   username: string;
   email: string;
-  role: string;
+  role: UserRole;
   employeeId: number | null;
 }
 
 export interface RefreshTokenRequest {
   refreshToken: string;
 }
+
