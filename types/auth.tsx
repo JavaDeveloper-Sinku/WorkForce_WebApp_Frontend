@@ -22,3 +22,7 @@ export interface UserMeResponse {
   role: string;
   employeeId: number | null;
 }
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}

@@ -5,6 +5,7 @@ import {
   AuthResponse,
   LoginRequest,
   UserMeResponse,
+  RefreshTokenRequest,
 } from "@/types/auth";
 
 /* =========================
@@ -17,6 +18,33 @@ export const login = async (
   const response = await api.post<ApiResponse<AuthResponse>>(
     "/api/auth/login",
     request
+  );
+
+  return response.data;
+};
+
+/* =========================
+   Refresh Token
+========================= */
+
+export const refreshToken = async (
+  request: RefreshTokenRequest
+): Promise<ApiResponse<AuthResponse>> => {
+  const response = await api.post<ApiResponse<AuthResponse>>(
+    "/api/auth/refresh",
+    request
+  );
+
+  return response.data;
+};
+
+/* =========================
+   Logout
+========================= */
+
+export const logout = async (): Promise<ApiResponse<string>> => {
+  const response = await api.post<ApiResponse<string>>(
+    "/api/auth/logout"
   );
 
   return response.data;

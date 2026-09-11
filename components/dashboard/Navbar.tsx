@@ -18,9 +18,10 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-import { getCurrentUser } from "@/services/auth/authService";
+import { getCurrentUser, logout } from "@/services/auth/authService";
 
 import { UserMeResponse } from "@/types/auth";
+
 
 interface NavbarProps {
   onMenuClick?: () => void;
@@ -227,12 +228,18 @@ export default function Navbar({ onMenuClick }: NavbarProps) {
 
   // ---- Logout ----
 
-  const handleLogout = () => {
+const handleLogout = async () => {
+  try {
+    await logout();
+  } catch (error) {
+    console.error("Logout API failed:", error);
+  } finally {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
 
     window.location.href = "/login";
-  };
+  }
+};
 
   // ---- Notification Actions ----
 
