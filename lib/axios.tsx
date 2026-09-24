@@ -1,17 +1,11 @@
-
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: process.env.backend_URL,
+  baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
-
-/* =========================
-   Request Interceptor
-   Attach Access Token
-========================= */
 
 api.interceptors.request.use(
   (config) => {
@@ -25,27 +19,14 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-/* =========================
-   Response Interceptor
-   Handle 401
-========================= */
-
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
 
   async (error) => {
     const originalRequest = error.config;
-
-    /* =========================
-       Access Token Expired
-    ========================= */
 
     if (
       error.response?.status === 401 &&
@@ -65,41 +46,19 @@ api.interceptors.response.use(
       }
 
       try {
-        /* =========================
-           Refresh Access Token
-        ========================= */
-
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`,
-          {
-            refreshToken,
-          }
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/refresh`,
+          { refreshToken }
         );
 
         const newAccessToken = response.data.data.accessToken;
 
-        /* =========================
-           Save New Access Token
-        ========================= */
-
         localStorage.setItem("accessToken", newAccessToken);
-
-        /* =========================
-           Update Original Request
-        ========================= */
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
-        /* =========================
-           Retry Original Request
-        ========================= */
-
         return api(originalRequest);
       } catch (refreshError) {
-        /* =========================
-           Refresh Failed
-        ========================= */
-
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
 
