@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, Loader2, ArrowRight, ShieldCheck, AlertCircle } from "lucide-react";
 import api from "@/lib/axios";
 
 export default function LoginForm() {
@@ -53,15 +53,8 @@ export default function LoginForm() {
       }
 
       // Save tokens
-      localStorage.setItem(
-        "accessToken",
-        result.data.accessToken
-      );
-
-      localStorage.setItem(
-        "refreshToken",
-        result.data.refreshToken
-      );
+      localStorage.setItem("accessToken", result.data.accessToken);
+      localStorage.setItem("refreshToken", result.data.refreshToken);
 
       // Login successful
       router.push("/dashboard");
@@ -69,18 +62,14 @@ export default function LoginForm() {
       if (error.response) {
         // Backend returned an error
         setError(
-          error.response.data?.message ||
-            "Invalid email or password"
+          error.response.data?.message || "Invalid email or password"
         );
       } else if (error.request) {
         // Backend not reachable
-        setError(
-          "Unable to connect to server. Please try again."
-        );
+        setError("Unable to connect to server. Please try again.");
       } else {
         setError(
-          error.message ||
-            "Something went wrong. Please try again."
+          error.message || "Something went wrong. Please try again."
         );
       }
     } finally {
@@ -89,122 +78,144 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md">
-      {/* Header */}
-      <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-black">
-          <Lock className="h-6 w-6 text-white" />
-        </div>
+    <div className="relative mx-auto w-full max-w-md">
+      {/* Background Decorative Glow */}
+      <div className="pointer-events-none absolute -top-12 left-1/2 -z-10 h-64 w-64 -translate-x-1/2 rounded-full bg-emerald-500/10 blur-3xl" />
 
-        <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back
-        </h1>
-
-        <p className="mt-2 text-sm text-gray-500">
-          Sign in to your WorkForce account
-        </p>
-      </div>
-
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Email */}
-        <div>
-          <label
-            htmlFor="email"
-            className="mb-2 block text-sm font-medium text-gray-700"
-          >
-            Email Address
-          </label>
-
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-
-            <input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="you@company.com"
-              required
-              disabled={loading}
-              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-4 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 disabled:cursor-not-allowed disabled:opacity-60"
-            />
+      {/* Main Card Container */}
+      <div className="rounded-3xl border border-gray-100 bg-white/90 p-8 shadow-xl shadow-gray-200/50 backdrop-blur-xl sm:p-10">
+        
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-500/20">
+            <Lock className="h-7 w-7" />
           </div>
+
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <ShieldCheck size={14} />
+            Secure Portal
+          </div>
+
+          <h1 className="mt-3 text-2xl font-black tracking-tight text-gray-900 sm:text-3xl">
+            Welcome back
+          </h1>
+
+          <p className="mt-2 text-sm font-medium text-gray-500">
+            Sign in to access your WorkForce workspace
+          </p>
         </div>
 
-        {/* Password */}
-        <div>
-          <label
-            htmlFor="password"
-            className="mb-2 block text-sm font-medium text-gray-700"
-          >
-            Password
-          </label>
-
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-
-            <input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-              disabled={loading}
-              className="w-full rounded-xl border border-gray-200 bg-white py-3 pl-11 pr-12 text-sm outline-none transition focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10 disabled:cursor-not-allowed disabled:opacity-60"
-            />
-
-            <button
-              type="button"
-              onClick={() =>
-                setShowPassword(!showPassword)
-              }
-              disabled={loading}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-700"
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Email */}
+          <div>
+            <label
+              htmlFor="email"
+              className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-700"
             >
-              {showPassword ? (
-                <EyeOff className="h-5 w-5" />
-              ) : (
-                <Eye className="h-5 w-5" />
-              )}
-            </button>
-          </div>
-        </div>
+              Email Address
+            </label>
 
-        {/* Error */}
-        {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-            {error}
-          </div>
-        )}
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-emerald-600" />
 
-        {/* Reset Password */}
-        <div className="flex justify-end">
-          <Link
-            href="/reset-password"
-            className="text-sm font-medium text-gray-700 transition hover:text-black hover:underline"
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="you@company.com"
+                required
+                disabled={loading}
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50/50 py-3.5 pl-11 pr-4 text-sm font-medium text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label
+                htmlFor="password"
+                className="block text-xs font-semibold uppercase tracking-wider text-gray-700"
+              >
+                Password
+              </label>
+
+              <Link
+                href="/reset-password"
+                className="text-xs font-semibold text-emerald-600 transition hover:text-emerald-700 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            <div className="relative">
+              <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 transition-colors" />
+
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="••••••••"
+                required
+                disabled={loading}
+                className="w-full rounded-2xl border border-gray-200 bg-gray-50/50 py-3.5 pl-11 pr-12 text-sm font-medium text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-emerald-500 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={loading}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-700 focus:outline-none"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* Error */}
+          {error && (
+            <div className="flex items-center gap-2.5 rounded-2xl border border-rose-200 bg-rose-50/80 p-4 text-sm font-medium text-rose-700 animate-in fade-in slide-in-from-top-1">
+              <AlertCircle className="h-5 w-5 shrink-0 text-rose-500" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gray-900 py-3.5 text-sm font-semibold text-white shadow-lg shadow-gray-900/10 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-600 hover:shadow-emerald-600/25 active:translate-y-0 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Reset password?
-          </Link>
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign In</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Footer */}
+        <div className="mt-8 border-t border-gray-100 pt-6 text-center">
+          <p className="text-xs font-medium text-gray-400">
+            Contact your HR or Admin if you don&apos;t have account access.
+          </p>
         </div>
-
-        {/* Login */}
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-xl bg-black py-3 text-sm font-semibold text-white transition hover:bg-gray-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {loading ? "Signing in..." : "Sign In"}
-        </button>
-      </form>
-
-      {/* Footer */}
-      <p className="mt-8 text-center text-xs text-gray-400">
-        Contact your HR or Admin if you don&apos;t have an account.
-      </p>
+      </div>
     </div>
   );
 }
