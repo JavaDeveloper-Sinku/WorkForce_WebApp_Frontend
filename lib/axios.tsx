@@ -1,3 +1,4 @@
+
 import axios from "axios";
 
 const api = axios.create({
@@ -15,12 +16,10 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
-      const accessToken =
-        localStorage.getItem("accessToken");
+      const accessToken = localStorage.getItem("accessToken");
 
       if (accessToken) {
-        config.headers.Authorization =
-          `Bearer ${accessToken}`;
+        config.headers.Authorization = `Bearer ${accessToken}`;
       }
     }
 
@@ -42,7 +41,6 @@ api.interceptors.response.use(
   },
 
   async (error) => {
-
     const originalRequest = error.config;
 
     /* =========================
@@ -51,24 +49,22 @@ api.interceptors.response.use(
 
     if (
       error.response?.status === 401 &&
+      originalRequest &&
       !originalRequest._retry
     ) {
-
       originalRequest._retry = true;
 
       if (typeof window === "undefined") {
         return Promise.reject(error);
       }
 
-      const refreshToken =
-        localStorage.getItem("refreshToken");
+      const refreshToken = localStorage.getItem("refreshToken");
 
       if (!refreshToken) {
         return Promise.reject(error);
       }
 
       try {
-
         /* =========================
            Refresh Access Token
         ========================= */
@@ -80,33 +76,26 @@ api.interceptors.response.use(
           }
         );
 
-        const newAccessToken =
-          response.data.data.accessToken;
+        const newAccessToken = response.data.data.accessToken;
 
         /* =========================
            Save New Access Token
         ========================= */
 
-        localStorage.setItem(
-          "accessToken",
-          newAccessToken
-        );
+        localStorage.setItem("accessToken", newAccessToken);
 
         /* =========================
            Update Original Request
         ========================= */
 
-        originalRequest.headers.Authorization =
-          `Bearer ${newAccessToken}`;
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         /* =========================
            Retry Original Request
         ========================= */
 
         return api(originalRequest);
-
       } catch (refreshError) {
-
         /* =========================
            Refresh Failed
         ========================= */
