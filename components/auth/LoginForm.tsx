@@ -1,10 +1,21 @@
+
 "use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Mail, Loader2, ArrowRight, ShieldCheck, AlertCircle } from "lucide-react";
-import api from "@/lib/axios";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  Loader2,
+  ArrowRight,
+  ShieldCheck,
+  AlertCircle,
+} from "lucide-react";
+
+import { login } from "@/services/auth/authService";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -38,9 +49,8 @@ export default function LoginForm() {
     setError("");
 
     try {
-      const response = await api.post("/api/auth/login", formData);
-
-      const result = response.data;
+      // Call auth service
+      const result = await login(formData);
 
       // Check backend response
       if (!result.success || !result.data) {
@@ -48,29 +58,55 @@ export default function LoginForm() {
       }
 
       // Make sure tokens exist
-      if (!result.data.accessToken || !result.data.refreshToken) {
+      if (
+        !result.data.accessToken ||
+        !result.data.refreshToken
+      ) {
         throw new Error("Invalid response from server");
       }
 
       // Save tokens
-      localStorage.setItem("accessToken", result.data.accessToken);
-      localStorage.setItem("refreshToken", result.data.refreshToken);
+      localStorage.setItem(
+        "accessToken",
+        result.data.accessToken
+      );
+
+      localStorage.setItem(
+        "refreshToken",
+        result.data.refreshToken
+      );
 
       // Login successful
       router.push("/dashboard");
-    } catch (error: any) {
-      if (error.response) {
-        // Backend returned an error
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response?: {
+            data?: {
+              message?: string;
+            };
+          };
+        };
+
         setError(
-          error.response.data?.message || "Invalid email or password"
+          axiosError.response?.data?.message ||
+            "Invalid email or password"
         );
-      } else if (error.request) {
-        // Backend not reachable
-        setError("Unable to connect to server. Please try again.");
+      } else if (
+        error &&
+        typeof error === "object" &&
+        "request" in error
+      ) {
+        setError(
+          "Unable to connect to server. Please try again."
+        );
+      } else if (error instanceof Error) {
+        setError(
+          error.message ||
+            "Something went wrong. Please try again."
+        );
       } else {
-        setError(
-          error.message || "Something went wrong. Please try again."
-        );
+        setError("Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -84,7 +120,6 @@ export default function LoginForm() {
 
       {/* Main Card Container */}
       <div className="rounded-3xl border border-gray-100 bg-white/90 p-8 shadow-xl shadow-gray-200/50 backdrop-blur-xl sm:p-10">
-        
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-lg shadow-emerald-500/20">
@@ -117,7 +152,7 @@ export default function LoginForm() {
             </label>
 
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-emerald-600" />
+              <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
 
               <input
                 id="email"
@@ -152,7 +187,7 @@ export default function LoginForm() {
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 transition-colors" />
+              <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
 
               <input
                 id="password"
@@ -168,7 +203,9 @@ export default function LoginForm() {
 
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
+                onClick={() =>
+                  setShowPassword(!showPassword)
+                }
                 disabled={loading}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 transition hover:text-gray-700 focus:outline-none"
               >
@@ -185,6 +222,7 @@ export default function LoginForm() {
           {error && (
             <div className="flex items-center gap-2.5 rounded-2xl border border-rose-200 bg-rose-50/80 p-4 text-sm font-medium text-rose-700 animate-in fade-in slide-in-from-top-1">
               <AlertCircle className="h-5 w-5 shrink-0 text-rose-500" />
+
               <span>{error}</span>
             </div>
           )}
@@ -212,7 +250,8 @@ export default function LoginForm() {
         {/* Footer */}
         <div className="mt-8 border-t border-gray-100 pt-6 text-center">
           <p className="text-xs font-medium text-gray-400">
-            Contact your HR or Admin if you don&apos;t have account access.
+            Contact your HR or Admin if you don&apos;t have
+            account access.
           </p>
         </div>
       </div>
