@@ -455,6 +455,7 @@ export default function Home() {
             </p>
           </div>
 
+
           <div className="mt-16 grid gap-8 md:grid-cols-3">
             {/* Card 1: Employee Management */}
             <div className="group rounded-3xl border border-slate-200/80 bg-white p-8 transition duration-300 hover:-translate-y-2 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-500/10">
